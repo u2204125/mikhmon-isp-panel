@@ -26,8 +26,9 @@ Lightweight web-based ISP/hotspot management interface built around the Mikhmon 
 ## Installation (local quick start)
 
 1. Clone this repository:
-
+```bash
 	git clone https://github.com/<your-username>/<your-repo>.git
+```
 
 2. Place the files in your web root or configure a virtual host pointing to the cloned directory.
 3. Copy or update configuration files (example: `include/config.php`, `include/readcfg.php`) with your environment settings (router credentials, base URL, etc.).
