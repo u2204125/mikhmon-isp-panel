@@ -27,7 +27,7 @@ Lightweight web-based ISP/hotspot management interface built around the Mikhmon 
 
 1. Clone this repository:
 ```bash
-	git clone https://github.com/<your-username>/<your-repo>.git
+	git clone https://github.com/u2204125/mikhmon-isp-panel.git
 ```
 
 2. Place the files in your web root or configure a virtual host pointing to the cloned directory.
