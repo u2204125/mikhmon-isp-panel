@@ -27,20 +27,34 @@ if (!isset($_SESSION["mikhmon"])) {
 
   if (isset($_POST['save'])) {
 
-    $suseradm = ($_POST['useradm']);
-    $spassadm = encrypt($_POST['passadm']);
-    $logobt = ($_POST['logobt']);
-    $qrbt = ($_POST['qrbt']);
+    // Update admin credentials in project .env so include/config.php continues to
+    // read them (include/config.php calls loadEnv and then encrypts the password).
+    $suseradm = trim($_POST['useradm']);
+    $spassadm_raw = trim($_POST['passadm']);
+    $logobt = $_POST['logobt'];
+    $qrbt = $_POST['qrbt'];
 
-    $cari = array('1' => "mikhmon<|<$useradm", "mikhmon>|>$passadm");
-    $ganti = array('1' => "mikhmon<|<$suseradm", "mikhmon>|>$spassadm");
-
-    for ($i = 1; $i < 3; $i++) {
-      $file = file("./include/config.php");
-      $content = file_get_contents("./include/config.php");
-      $newcontent = str_replace((string)$cari[$i], (string)$ganti[$i], "$content");
-      file_put_contents("./include/config.php", "$newcontent");
+    // .env path (project root .env)
+    $envPath = __DIR__ . '/../../.env';
+    $env = [];
+    if (file_exists($envPath)) {
+      $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach ($lines as $ln) {
+        if (strpos(trim($ln), '#') === 0) continue;
+        $p = explode('=', $ln, 2);
+        if (count($p) == 2) $env[trim($p[0])] = trim($p[1]);
+      }
     }
+
+    $env['DEFAULT_ADMIN_USERNAME'] = $suseradm;
+    $env['DEFAULT_ADMIN_PASSWORD'] = $spassadm_raw;
+
+    // write back .env (preserve comments not implemented; write minimal file)
+    $out = [];
+    foreach ($env as $k => $v) {
+      $out[] = "$k=$v";
+    }
+    file_put_contents($envPath, implode("\n", $out));
 
   
   $gen = '<?php $qrbt="' . $qrbt . '";?>';
@@ -79,10 +93,9 @@ if (!isset($_SESSION["mikhmon"])) {
             <div class="card-body">
             <div class="row">
               <?php
-              foreach (file('./include/config.php') as $line) {
-                $value = explode("'", $line)[1];
-                if ($value == "" || $value == "mikhmon") {
-                } else { ?>
+              if (isset($data) && is_array($data)) {
+                foreach ($data as $value => $darr) {
+                  if ($value == "" || $value == "mikhmon") continue; ?>
                     <div class="col-12">
                         <div class="box bmh-75 box-bordered <?= $color[rand(1, 11)]; ?>">
                                 <div class="box-group">
@@ -109,9 +122,9 @@ if (!isset($_SESSION["mikhmon"])) {
                             </div>
                           </div>
               <?php
-            }
-          }
-          ?>
+                }
+              }
+              ?>
               </div>
             </div>
           </div>

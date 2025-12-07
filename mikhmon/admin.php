@@ -144,15 +144,25 @@ if ($id == "login" || substr($url, -1) == "p") {
   include_once('./process/shutdown.php');
 } elseif ($id == "remove-session" && $session != "") {
   include_once('./include/menu.php');
-  $fc = file("./include/config.php" );
-  $f = fopen("./include/config.php", "w");
-  $q = "'";
-  $rem = '$data['.$q.$session.$q.']';
-  foreach ($fc as $line) {
-    if (!strstr($line, $rem))
-      fputs($f, $line);
+  // Remove router from routers.csv instead of editing config.php
+  $csvPath = __DIR__ . '/include/routers.csv';
+  if (file_exists($csvPath) && is_readable($csvPath)) {
+    $out = [];
+    if (($h = fopen($csvPath, 'r')) !== false) {
+      $row = 0;
+      while (($r = fgetcsv($h)) !== false) {
+        if ($row === 0) { $out[] = $r; $row++; continue; }
+        if (isset($r[0]) && trim($r[0]) === $session) { $row++; continue; }
+        $out[] = $r;
+        $row++;
+      }
+      fclose($h);
+    }
+    if (($w = fopen($csvPath, 'w')) !== false) {
+      foreach ($out as $r) fputcsv($w, $r);
+      fclose($w);
+    }
   }
-  fclose($f);
   echo "<script>window.location='./admin.php?id=sessions'</script>";
 } elseif ($id == "about") {
   include_once('./include/menu.php');

@@ -24,17 +24,19 @@ if (!isset($_SESSION["mikhmon"])) {
 } else {
 
   if ($id == "settings" && explode("-",$router)[0] == "new") {
-    $data = '$data';
-    $f = fopen('./include/config.php', 'a');
-    fwrite($f, "\n'$'data['".$router."'] = array ('1'=>'".$router."!','".$router."@|@','".$router."#|#','".$router."%','".$router."^','".$router."&Rp','".$router."*10','".$router."(1','".$router.")','".$router."=10','".$router."@!@disable');");
-    fclose($f);
-    $search = "'$'data";
-    $replace = (string)"$data";
-    $file = file("./include/config.php");
-    $content = file_get_contents("./include/config.php");
-    $newcontent = str_replace((string)$search, (string)$replace, "$content");
-    file_put_contents("./include/config.php", "$newcontent");
-    echo "<script>window.location='./admin.php?id=settings&session=" . $router . "'</script>";
+    // Create a new router entry in routers.csv with default values
+    $newSession = $router;
+    $csvPath = __DIR__ . '/include/routers.csv';
+    $row = [$newSession, '', '', '', '', '', 'Rp', '10', '1', '', '10', 'disable'];
+    $needHeader = !file_exists($csvPath);
+    if (($h = fopen($csvPath, 'a')) !== false) {
+      if ($needHeader) {
+        fputcsv($h, ['session','ipmik','usermik','passmik','hotspotname','dnsname','currency','areload','iface','infolp','idleto','livereport']);
+      }
+      fputcsv($h, $row);
+      fclose($h);
+    }
+    echo "<script>window.location='./admin.php?id=settings&session=" . $newSession . "'</script>";
   }
 
   if (isset($_POST['save'])) {
@@ -60,16 +62,54 @@ if (!isset($_SESSION["mikhmon"])) {
     $sesname = (preg_replace('/\s+/', '-', $_POST['sessname']));
     $slivereport = ($_POST['livereport']);
 
-    $search = array('1' => "$session!$iphost", "$session@|@$userhost", "$session#|#$passwdhost", "$session%$hotspotname", "$session^$dnsname", "$session&$currency", "$session*$areload", "$session($iface", "$session)$infolp", "$session=$idleto", "'$session'", "$session@!@$livereport");
-
-    $replace = array('1' => "$sesname!$siphost", "$sesname@|@$suserhost", "$sesname#|#$spasswdhost", "$sesname%$shotspotname", "$sesname^$sdnsname", "$sesname&$scurrency", "$sesname*$sreload", "$sesname($siface", "$sesname)$sinfolp", "$sesname=$sidleto", "'$sesname'", "$sesname@!@$slivereport");
-
-    for ($i = 1; $i < 15; $i++) {
-      $file = file("./include/config.php");
-      $content = file_get_contents("./include/config.php");
-      $newcontent = str_replace((string)$search[$i], (string)$replace[$i], "$content");
-      file_put_contents("./include/config.php", "$newcontent");
+    // Update routers.csv: read all routers, update matching session, write back
+    $csvPath = __DIR__ . '/include/routers.csv';
+    $routers = [];
+    if (file_exists($csvPath) && is_readable($csvPath)) {
+      if (($h = fopen($csvPath, 'r')) !== false) {
+        $row = 0;
+        $headers = [];
+        while (($r = fgetcsv($h)) !== false) {
+          if ($row === 0) {
+            $first = isset($r[0]) ? strtolower(trim($r[0])) : '';
+            if (in_array($first, ['session','sessname','id'])) { $headers = $r; $row++; continue; }
+          }
+          if (count($r) === 0) { $row++; continue; }
+          $s = isset($r[0]) ? $r[0] : null;
+          if (!$s) { $row++; continue; }
+          $routers[$s] = $r;
+          $row++;
+        }
+        fclose($h);
+      }
     }
+
+    // find and update
+    if (isset($routers[$session])) {
+      $routers[$sesname] = [
+        $sesname,
+        $siphost,
+        $suserhost,
+        $spasswdhost,
+        $shotspotname,
+        $sdnsname,
+        $scurrency,
+        $sreload,
+        $siface,
+        $sinfolp,
+        $sidleto,
+        $slivereport
+      ];
+      if ($sesname !== $session) unset($routers[$session]);
+    }
+
+    // write back
+    if (($w = fopen($csvPath, 'w')) !== false) {
+      fputcsv($w, ['session','ipmik','usermik','passmik','hotspotname','dnsname','currency','areload','iface','infolp','idleto','livereport']);
+      foreach ($routers as $r) fputcsv($w, $r);
+      fclose($w);
+    }
+
     $_SESSION["connect"] = "";
     echo "<script>window.location='./admin.php?id=settings&session=" . $sesname . "'</script>";
   }

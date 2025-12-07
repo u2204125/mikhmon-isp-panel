@@ -9,6 +9,8 @@ const Modal = {
   open() {
     document.getElementById('qa-add-router-form').reset();
     document.getElementById('qa-add-router-modal').classList.add('qa-active');
+    // prevent background scrolling while modal is open
+    try { document.body.classList.add('qa-modal-open'); } catch(e){}
   },
 
   /**
@@ -16,6 +18,7 @@ const Modal = {
    */
   close() {
     document.getElementById('qa-add-router-modal').classList.remove('qa-active');
+    try { document.body.classList.remove('qa-modal-open'); } catch(e){}
   }
 };
 

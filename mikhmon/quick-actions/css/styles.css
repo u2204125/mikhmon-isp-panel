@@ -69,6 +69,13 @@ body::before {
   z-index: 0;
 }
 
+/* When a modal is open prevent background from scrolling (fix double scrollbar) */
+body.qa-modal-open {
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
 /* Accessibility - Focus Styles */
 *:focus-visible {
   outline: 2px solid var(--qa-accent);
@@ -129,6 +136,7 @@ body::before {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap; /* allow actions to wrap on small screens */
 }
 
 .qa-user-info {
@@ -353,7 +361,7 @@ body::before {
 
 .qa-table th {
   padding: 1rem;
-  text-align: left;
+  text-align: center;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--qa-accent);
@@ -366,6 +374,7 @@ body::before {
   padding: 1rem;
   border-bottom: 1px solid var(--qa-border);
   font-size: 0.875rem;
+  text-align: center;
 }
 
 .qa-table tbody tr {
@@ -410,7 +419,7 @@ body::before {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 607px) {
   .qa-table {
     display: none;
   }
@@ -540,20 +549,17 @@ body::before {
 }
 
 #qa-add-router-modal.qa-active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
 }
 
 .qa-modal-content {
+  margin: auto;
   background: var(--qa-glass);
   backdrop-filter: blur(10px);
   border: 1px solid var(--qa-border);
   border-radius: 12px;
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
   box-shadow: var(--qa-glow-strong);
   position: relative;
 }
@@ -725,7 +731,6 @@ body::before {
   
   .qa-dashboard-header {
     flex-direction: column;
-    align-items: flex-start;
   }
   
   .qa-toolbar {
@@ -741,13 +746,41 @@ body::before {
     grid-template-columns: 1fr;
   }
   
-  .qa-modal-content {
-    margin: 1rem;
-  }
-  
   #qa-toast-container {
     right: 1rem;
     left: 1rem;
     top: 4rem;
+  }
+  /* header tweaks for smaller devices */
+  .qa-logo {
+    gap: 0.5rem;
+    font-size: 1rem;
+  }
+  .qa-logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .qa-header-actions {
+    justify-content: flex-end;
+  }
+  .qa-user-info {
+    display: none; /* hide verbose user info on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  /* compact header: show only icon and minimal buttons */
+  #qa-header {
+    padding: 0.5rem 0.75rem;
+  }
+  .qa-logo span {
+    display: none; /* hide text label on very small screens */
+  }
+  .qa-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  .qa-search-box input {
+    width: 140px;
   }
 }

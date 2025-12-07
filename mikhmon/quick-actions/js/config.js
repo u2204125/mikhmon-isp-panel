@@ -4,7 +4,7 @@
  */
 
 const APP_CONFIG = {
-  API_BASE: './api',
+  API_BASE: './quick-actions/api',
   STORAGE_KEYS: {
     TOKEN: 'qa_auth_token',
     USERNAME: 'qa_username',

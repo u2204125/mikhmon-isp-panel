@@ -10,32 +10,9 @@ if (basename($_SERVER['PHP_SELF']) === 'config.php') {
     exit('Direct access not allowed');
 }
 
-// Load environment variables from .env file
-function loadEnv($path) {
-    if (!file_exists($path)) {
-        return;
-    }
-    
-    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) {
-            continue;
-        }
-        
-        list($name, $value) = explode('=', $line, 2);
-        $name = trim($name);
-        $value = trim($value);
-        
-        if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
-            putenv(sprintf('%s=%s', $name, $value));
-            $_ENV[$name] = $value;
-            $_SERVER[$name] = $value;
-        }
-    }
-}
-
 // Load .env file
-$envPath = dirname(__DIR__) . '/.env';
+require_once dirname(__DIR__) . '/../lib/env_loader.php';
+$envPath = dirname(__DIR__) . '/../../../.env';
 loadEnv($envPath);
 
 // API Configuration from environment or defaults
@@ -55,15 +32,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Load parent config for router management
-$parentConfigPath = getenv('MIKHMON_CONFIG_PATH') ?: dirname(__DIR__, 2) . '/mikhmon/include/config.php';
+$parentConfigPath = dirname(__DIR__) . '/../include/config.php';
 if (file_exists($parentConfigPath)) {
     require_once $parentConfigPath;
 }
 
 // Load encryption/decryption functions
-$routerosApiPath = getenv('ROUTEROS_API_PATH') ?: dirname(__DIR__, 2) . '/mikhmon/lib/routeros_api.class.php';
+$routerosApiPath = dirname(__DIR__) . '/../lib/routeros_api.class.php';
 if (file_exists($routerosApiPath)) {
     require_once $routerosApiPath;
+}
+
+// Polyfill for getallheaders() for environments that don't provide it (e.g., non-Apache)
+if (!function_exists('getallheaders')) {
+    function getallheaders() {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (strpos($name, 'HTTP_') === 0) {
+                // Convert HTTP_HEADER_NAME to Header-Name
+                $headerName = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
+                $headers[$headerName] = $value;
+            }
+        }
+        return $headers;
+    }
 }
 
 /**

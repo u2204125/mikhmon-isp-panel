@@ -52,6 +52,11 @@ session_start();
         </tr>
         <tr>
           <td class="align-middle text-center">
+            <a style="margin-top:20px; font-weight: bold; font-size: 17px;" class="btn-login bg-secondary pointer" href="/quick-actions">Quick Action</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="align-middle text-center">
             <?= $error; ?>
           </td>
         </tr>
